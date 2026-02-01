@@ -1,6 +1,6 @@
 import { 
-  type Listing, type InsertListing, 
-  type Contact, type InsertContact 
+  type Listing,
+  type InsertContact 
 } from "@shared/schema";
 
 export interface IStorage {
@@ -11,8 +11,6 @@ export interface IStorage {
 
 export class MemStorage implements IStorage {
   private listings: Listing[];
-  private contacts: Contact[];
-  private currentId: number;
 
   constructor() {
     this.listings = [
@@ -101,8 +99,6 @@ export class MemStorage implements IStorage {
         isFeatured: false
       }
     ];
-    this.contacts = [];
-    this.currentId = 1;
   }
 
   async getListings(filters?: { minPrice?: number; maxPrice?: number; city?: string; type?: string }): Promise<Listing[]> {
@@ -131,10 +127,9 @@ export class MemStorage implements IStorage {
   }
 
   async submitContact(contact: InsertContact): Promise<void> {
-    const id = this.currentId++;
-    // In a real app we'd save this, but for this mock we just acknowledge it
-    // this.contacts.push({ ...contact, id });
-    console.log("Contact submission:", contact);
+    // Just log the contact submission - no storage needed for dummy project
+    console.log("Contact submission received:", contact);
+    // Success response will be handled by the route handler
   }
 }
 

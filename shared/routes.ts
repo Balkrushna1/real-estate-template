@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertContactSchema, insertListingSchema, listings } from './schema';
+import { insertContactSchema, type Listing } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -26,14 +26,14 @@ export const api = {
         type: z.enum(['residential', 'commercial']).optional(),
       }).optional(),
       responses: {
-        200: z.array(z.custom<typeof listings.$inferSelect>()),
+        200: z.array(z.custom<Listing>()),
       },
     },
     get: {
       method: 'GET' as const,
       path: '/api/listings/:id',
       responses: {
-        200: z.custom<typeof listings.$inferSelect>(),
+        200: z.custom<Listing>(),
         404: errorSchemas.notFound,
       },
     },

@@ -1,34 +1,36 @@
-import { pgTable, text, serial, integer, boolean, numeric } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const listings = pgTable("listings", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  price: numeric("price").notNull(),
-  address: text("address").notNull(),
-  city: text("city").notNull(),
-  type: text("type").notNull(), // 'residential' | 'commercial'
-  bedrooms: integer("bedrooms"),
-  bathrooms: integer("bathrooms"),
-  sqft: integer("sqft").notNull(),
-  imageUrl: text("image_url").notNull(),
-  isFeatured: boolean("is_featured").default(false),
+// Listing type definition
+export interface Listing {
+  id: number;
+  title: string;
+  description: string;
+  price: string;
+  address: string;
+  city: string;
+  type: 'residential' | 'commercial';
+  bedrooms: number | null;
+  bathrooms: number;
+  sqft: number;
+  imageUrl: string;
+  isFeatured: boolean;
+}
+
+// Contact type definition
+export interface Contact {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string;
+  message: string;
+}
+
+// Schema for inserting contacts (validation)
+export const insertContactSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().optional(),
+  message: z.string().min(10, "Message must be at least 10 characters"),
 });
 
-export const contacts = pgTable("contacts", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull(),
-  phone: text("phone"),
-  message: text("message").notNull(),
-});
-
-export const insertListingSchema = createInsertSchema(listings).omit({ id: true });
-export const insertContactSchema = createInsertSchema(contacts).omit({ id: true });
-
-export type Listing = typeof listings.$inferSelect;
-export type InsertListing = z.infer<typeof insertListingSchema>;
-export type Contact = typeof contacts.$inferSelect;
 export type InsertContact = z.infer<typeof insertContactSchema>;
