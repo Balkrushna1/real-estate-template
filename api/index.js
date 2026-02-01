@@ -1,12 +1,4 @@
-const express = require('express');
-const path = require('path');
-
-const app = express();
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
-// Sample listings data
+// API Routes only - no static serving
 const listings = [
   {
     id: 1,
@@ -94,45 +86,55 @@ const listings = [
   }
 ];
 
-// API Routes
-app.get("/api/listings", (req, res) => {
-  let filtered = [...listings];
+module.exports = (req, res) => {
+  // Handle different API endpoints
+  const url = req.url || '';
+  const method = req.method;
   
-  if (req.query.minPrice) {
-    filtered = filtered.filter(l => Number(l.price) >= Number(req.query.minPrice));
-  }
-  if (req.query.maxPrice) {
-    filtered = filtered.filter(l => Number(l.price) <= Number(req.query.maxPrice));
-  }
-  if (req.query.city) {
-    filtered = filtered.filter(l => l.city.toLowerCase() === String(req.query.city).toLowerCase());
-  }
-  if (req.query.type) {
-    filtered = filtered.filter(l => l.type === req.query.type);
+  // GET /api/listings
+  if (url.startsWith('/api/listings/') && method === 'GET') {
+    const id = parseInt(url.split('/').pop());
+    const listing = listings.find(l => l.id === id);
+    if (!listing) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+    return res.status(200).json(listing);
   }
   
-  res.json(filtered);
-});
-
-app.get("/api/listings/:id", (req, res) => {
-  const listing = listings.find(l => l.id === Number(req.params.id));
-  if (!listing) {
-    return res.status(404).json({ message: "Listing not found" });
+  // GET /api/listings with filters
+  if (url.startsWith('/api/listings') && method === 'GET') {
+    const urlObj = new URL(url, `http://${req.headers.host}`);
+    const minPrice = urlObj.searchParams.get('minPrice');
+    const maxPrice = urlObj.searchParams.get('maxPrice');
+    const city = urlObj.searchParams.get('city');
+    const type = urlObj.searchParams.get('type');
+    
+    let filtered = [...listings];
+    
+    if (minPrice) {
+      filtered = filtered.filter(l => Number(l.price) >= Number(minPrice));
+    }
+    if (maxPrice) {
+      filtered = filtered.filter(l => Number(l.price) <= Number(maxPrice));
+    }
+    if (city) {
+      filtered = filtered.filter(l => l.city.toLowerCase() === city.toLowerCase());
+    }
+    if (type) {
+      filtered = filtered.filter(l => l.type === type);
+    }
+    
+    return res.status(200).json(filtered);
   }
-  res.json(listing);
-});
-
-app.post("/api/contact", (req, res) => {
-  console.log("Contact submission:", req.body);
-  res.json({ success: true, message: "Thank you for contacting us! We will get back to you soon." });
-});
-
-// Serve static files
-app.use(express.static(path.join(__dirname, '..', 'dist', 'public')));
-
-// SPA fallback
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'dist', 'public', 'index.html'));
-});
-
-module.exports = app;
+  
+  // POST /api/contact
+  if (url.startsWith('/api/contact') && method === 'POST') {
+    console.log("Contact submission:", req.body);
+    return res.status(200).json({ 
+      success: true, 
+      message: "Thank you for contacting us! We will get back to you soon." 
+    });
+  }
+  
+  return res.status(404).json({ message: 'Not found' });
+};
