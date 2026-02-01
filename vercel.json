@@ -2,9 +2,9 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist/public",
   "rewrites": [
-    { "source": "/api/listings", "destination": "/api/index.js" },
-    { "source": "/api/listings/:id", "destination": "/api/index.js" },
-    { "source": "/api/contact", "destination": "/api/index.js" },
+    { "source": "/api/listings/:id", "destination": "/api/listings?id=:id" },
+    { "source": "/api/listings", "destination": "/api/listings" },
+    { "source": "/api/contact", "destination": "/api/contact" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
