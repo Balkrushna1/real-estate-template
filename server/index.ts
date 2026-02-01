@@ -95,5 +95,5 @@ app.use((req, res, next) => {
   });
 })();
 
-// Export the Express app for Vercel
-module.exports = app;
+// Export for potential use (not needed for local dev)
+export { app };

@@ -1,4 +1,17 @@
-// API Routes only - Vercel Serverless Function
+// Simple Vercel serverless handler
+import express from "express";
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const app = express();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+// Sample listings data
 const listings = [
   {
     id: 1,
@@ -86,71 +99,45 @@ const listings = [
   }
 ];
 
-module.exports = (req, res) => {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+// API Routes
+app.get("/api/listings", (req, res) => {
+  let filtered = [...listings];
   
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  if (req.query.minPrice) {
+    filtered = filtered.filter(l => Number(l.price) >= Number(req.query.minPrice));
   }
+  if (req.query.maxPrice) {
+    filtered = filtered.filter(l => Number(l.price) <= Number(req.query.maxPrice));
+  }
+  if (req.query.city) {
+    filtered = filtered.filter(l => l.city.toLowerCase() === String(req.query.city).toLowerCase());
+  }
+  if (req.query.type) {
+    filtered = filtered.filter(l => l.type === req.query.type);
+  }
+  
+  res.json(filtered);
+});
 
-  const url = req.url || '';
-  const method = req.method;
-  
-  console.log('API Request:', method, url);
-  
-  // Parse URL to get path and query params
-  const urlParts = url.split('?');
-  const path = urlParts[0];
-  const queryString = urlParts[1] || '';
-  const queryParams = new URLSearchParams(queryString);
-  
-  // GET /api/listings/:id
-  if (path.match(/^\/api\/listings\/\d+$/) && method === 'GET') {
-    const id = parseInt(path.split('/').pop());
-    const listing = listings.find(l => l.id === id);
-    if (!listing) {
-      return res.status(404).json({ message: "Listing not found" });
-    }
-    return res.status(200).json(listing);
+app.get("/api/listings/:id", (req, res) => {
+  const listing = listings.find(l => l.id === Number(req.params.id));
+  if (!listing) {
+    return res.status(404).json({ message: "Listing not found" });
   }
-  
-  // GET /api/listings with filters
-  if (path === '/api/listings' && method === 'GET') {
-    const minPrice = queryParams.get('minPrice');
-    const maxPrice = queryParams.get('maxPrice');
-    const city = queryParams.get('city');
-    const type = queryParams.get('type');
-    
-    let filtered = [...listings];
-    
-    if (minPrice) {
-      filtered = filtered.filter(l => Number(l.price) >= Number(minPrice));
-    }
-    if (maxPrice) {
-      filtered = filtered.filter(l => Number(l.price) <= Number(maxPrice));
-    }
-    if (city) {
-      filtered = filtered.filter(l => l.city.toLowerCase() === city.toLowerCase());
-    }
-    if (type) {
-      filtered = filtered.filter(l => l.type === type);
-    }
-    
-    console.log('Returning listings:', filtered.length);
-    return res.status(200).json(filtered);
-  }
-  
-  // POST /api/contact
-  if (path === '/api/contact' && method === 'POST') {
-    console.log("Contact submission:", req.body);
-    return res.status(200).json({ 
-      success: true, 
-      message: "Thank you for contacting us! We will get back to you soon." 
-    });
-  }
-  
-  return res.status(404).json({ message: 'API endpoint not found', path, method });
-};
+  res.json(listing);
+});
+
+app.post("/api/contact", (req, res) => {
+  console.log("Contact submission:", req.body);
+  res.json({ success: true, message: "Thank you for contacting us! We will get back to you soon." });
+});
+
+// Serve static files from dist/public
+app.use(express.static(join(process.cwd(), 'dist', 'public')));
+
+// SPA fallback
+app.get("*", (req, res) => {
+  res.sendFile(join(process.cwd(), 'dist', 'public', 'index.html'));
+});
+
+export default app;
