@@ -1,10 +1,5 @@
-// Simple Vercel serverless handler
-import express from "express";
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const express = require('express');
+const path = require('path');
 
 const app = express();
 
@@ -132,12 +127,12 @@ app.post("/api/contact", (req, res) => {
   res.json({ success: true, message: "Thank you for contacting us! We will get back to you soon." });
 });
 
-// Serve static files from dist/public
-app.use(express.static(join(process.cwd(), 'dist', 'public')));
+// Serve static files
+app.use(express.static(path.join(__dirname, '..', 'dist', 'public')));
 
 // SPA fallback
 app.get("*", (req, res) => {
-  res.sendFile(join(process.cwd(), 'dist', 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, '..', 'dist', 'public', 'index.html'));
 });
 
-export default app;
+module.exports = app;
