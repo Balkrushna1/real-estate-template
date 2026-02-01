@@ -1,5 +1,5 @@
 .git
-*.log
+\*.log
 .DS_Store
 .env.local
-attached_assets
+attached_assetsnode_modules
